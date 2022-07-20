@@ -242,7 +242,7 @@ handle_keybinding(struct cg_server *server, xkb_keysym_t sym)
 static void
 handle_key_event(struct wlr_input_device *device, struct cg_seat *seat, void *data)
 {
-	struct wlr_event_keyboard_key *event = data;
+	struct wlr_keyboard_key_event *event = data;
 
 	/* Translate from libinput keycode to an xkbcommon keycode. */
 	xkb_keycode_t keycode = event->keycode + 8;
@@ -433,7 +433,7 @@ static void
 handle_touch_down(struct wl_listener *listener, void *data)
 {
 	struct cg_seat *seat = wl_container_of(listener, seat, touch_down);
-	struct wlr_event_touch_down *event = data;
+	struct wlr_touch_down_event *event = data;
 
 	double lx, ly;
 	wlr_cursor_absolute_to_layout_coords(seat->cursor, event->device, event->x, event->y, &lx, &ly);
@@ -461,7 +461,7 @@ static void
 handle_touch_up(struct wl_listener *listener, void *data)
 {
 	struct cg_seat *seat = wl_container_of(listener, seat, touch_up);
-	struct wlr_event_touch_up *event = data;
+	struct wlr_touch_up_event *event = data;
 
 	if (!wlr_seat_touch_get_point(seat->seat, event->touch_id)) {
 		return;
@@ -480,7 +480,7 @@ static void
 handle_touch_motion(struct wl_listener *listener, void *data)
 {
 	struct cg_seat *seat = wl_container_of(listener, seat, touch_motion);
-	struct wlr_event_touch_motion *event = data;
+	struct wlr_touch_motion_event *event = data;
 
 	if (!wlr_seat_touch_get_point(seat->seat, event->touch_id)) {
 		return;
@@ -521,7 +521,7 @@ static void
 handle_cursor_axis(struct wl_listener *listener, void *data)
 {
 	struct cg_seat *seat = wl_container_of(listener, seat, cursor_axis);
-	struct wlr_event_pointer_axis *event = data;
+	struct wlr_pointer_axis_event *event = data;
 
 	wlr_seat_pointer_notify_axis(seat->seat, event->time_msec, event->orientation, event->delta,
 				     event->delta_discrete, event->source);
@@ -532,7 +532,7 @@ static void
 handle_cursor_button(struct wl_listener *listener, void *data)
 {
 	struct cg_seat *seat = wl_container_of(listener, seat, cursor_button);
-	struct wlr_event_pointer_button *event = data;
+	struct wlr_pointer_button_event *event = data;
 
 	wlr_seat_pointer_notify_button(seat->seat, event->time_msec, event->button, event->state);
 	press_cursor_button(seat, event->device, event->time_msec, event->button, event->state, seat->cursor->x,
@@ -569,7 +569,7 @@ static void
 handle_cursor_motion_absolute(struct wl_listener *listener, void *data)
 {
 	struct cg_seat *seat = wl_container_of(listener, seat, cursor_motion_absolute);
-	struct wlr_event_pointer_motion_absolute *event = data;
+	struct wlr_pointer_motion_absolute_event *event = data;
 
 	wlr_cursor_warp_absolute(seat->cursor, event->device, event->x, event->y);
 	process_cursor_motion(seat, event->time_msec);
@@ -580,7 +580,7 @@ static void
 handle_cursor_motion(struct wl_listener *listener, void *data)
 {
 	struct cg_seat *seat = wl_container_of(listener, seat, cursor_motion);
-	struct wlr_event_pointer_motion *event = data;
+	struct wlr_pointer_motion_event *event = data;
 
 	wlr_cursor_move(seat->cursor, event->device, event->delta_x, event->delta_y);
 	process_cursor_motion(seat, event->time_msec);
