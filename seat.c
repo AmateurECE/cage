@@ -209,8 +209,10 @@ handle_new_pointer(struct cg_seat *seat, struct wlr_input_device *device)
 static void
 handle_modifier_event(struct wlr_input_device *device, struct cg_seat *seat)
 {
-	wlr_seat_set_keyboard(seat->seat, device);
-	wlr_seat_keyboard_notify_modifiers(seat->seat, &device->keyboard->modifiers);
+	struct wlr_keyboard* keyboard = wlr_keyboard_from_input_device(device);
+	wlr_seat_set_keyboard(seat->seat, keyboard);
+
+	wlr_seat_keyboard_notify_modifiers(seat->seat, &keyboard->modifiers);
 
 	wlr_idle_notify_activity(seat->server->idle, seat->seat);
 }
@@ -248,10 +250,11 @@ handle_key_event(struct wlr_input_device *device, struct cg_seat *seat, void *da
 	xkb_keycode_t keycode = event->keycode + 8;
 
 	const xkb_keysym_t *syms;
-	int nsyms = xkb_state_key_get_syms(device->keyboard->xkb_state, keycode, &syms);
+	struct wlr_keyboard* keyboard = wlr_keyboard_from_input_device(device);
+	int nsyms = xkb_state_key_get_syms(keyboard->xkb_state, keycode, &syms);
 
 	bool handled = false;
-	uint32_t modifiers = wlr_keyboard_get_modifiers(device->keyboard);
+	uint32_t modifiers = wlr_keyboard_get_modifiers(keyboard);
 	if ((modifiers & WLR_MODIFIER_ALT) && event->state == WL_KEYBOARD_KEY_STATE_PRESSED) {
 		/* If Alt is held down and this button was pressed, we
 		 * attempt to process it as a compositor
@@ -263,7 +266,8 @@ handle_key_event(struct wlr_input_device *device, struct cg_seat *seat, void *da
 
 	if (!handled) {
 		/* Otherwise, we pass it along to the client. */
-		wlr_seat_set_keyboard(seat->seat, device);
+		struct wlr_keyboard* keyboard = wlr_keyboard_from_input_device(device);
+		wlr_seat_set_keyboard(seat->seat, keyboard);
 		wlr_seat_keyboard_notify_key(seat->seat, event->time_msec, event->keycode, event->state);
 	}
 
@@ -287,8 +291,7 @@ handle_keyboard_group_modifiers(struct wl_listener *listener, void *data)
 static void
 cg_keyboard_group_add(struct wlr_input_device *device, struct cg_seat *seat)
 {
-	struct wlr_keyboard *wlr_keyboard = device->keyboard;
-
+	struct wlr_keyboard *wlr_keyboard = wlr_keyboard_from_input_device(device);
 	struct cg_keyboard_group *group;
 	wl_list_for_each (group, &seat->keyboard_groups, link) {
 		struct wlr_keyboard_group *wlr_group = group->wlr_group;
@@ -313,7 +316,8 @@ cg_keyboard_group_add(struct wlr_input_device *device, struct cg_seat *seat)
 	}
 
 	cg_group->wlr_group->data = cg_group;
-	wlr_keyboard_set_keymap(&cg_group->wlr_group->keyboard, device->keyboard->keymap);
+	struct wlr_keyboard* keyboard = wlr_keyboard_from_input_device(device);
+	wlr_keyboard_set_keymap(&cg_group->wlr_group->keyboard, keyboard->keymap);
 
 	wlr_keyboard_set_repeat_info(&cg_group->wlr_group->keyboard, wlr_keyboard->repeat_info.rate,
 				     wlr_keyboard->repeat_info.delay);
@@ -353,11 +357,12 @@ handle_new_keyboard(struct cg_seat *seat, struct wlr_input_device *device)
 		return;
 	}
 
-	wlr_keyboard_set_keymap(device->keyboard, keymap);
+	struct wlr_keyboard* keyboard = wlr_keyboard_from_input_device(device);
+	wlr_keyboard_set_keymap(keyboard, keymap);
 
 	xkb_keymap_unref(keymap);
 	xkb_context_unref(context);
-	wlr_keyboard_set_repeat_info(device->keyboard, 25, 600);
+	wlr_keyboard_set_repeat_info(keyboard, 25, 600);
 
 	cg_keyboard_group_add(device, seat);
 
