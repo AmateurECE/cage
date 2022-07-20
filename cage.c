@@ -54,6 +54,10 @@
 #include "xwayland.h"
 #endif
 
+/* The max version of the wlr-foreign-toplevel-management-unstable protocol to
+   support */
+#define WLR_FOREIGN_TOPLEVEL_MANAGEMENT_UNSTABLE_MAX_VERSION 3
+
 static int
 sigchld_handler(int fd, uint32_t mask, void *data)
 {
@@ -388,7 +392,7 @@ main(int argc, char *argv[])
 	wl_signal_add(&server.idle_inhibit_v1->events.new_inhibitor, &server.new_idle_inhibitor_v1);
 	wl_list_init(&server.inhibitors);
 
-	xdg_shell = wlr_xdg_shell_create(server.wl_display);
+	xdg_shell = wlr_xdg_shell_create(server.wl_display, WLR_FOREIGN_TOPLEVEL_MANAGEMENT_UNSTABLE_MAX_VERSION);
 	if (!xdg_shell) {
 		wlr_log(WLR_ERROR, "Unable to create the XDG shell interface");
 		ret = 1;
