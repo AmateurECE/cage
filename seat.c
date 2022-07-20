@@ -436,7 +436,7 @@ handle_touch_down(struct wl_listener *listener, void *data)
 	struct wlr_touch_down_event *event = data;
 
 	double lx, ly;
-	wlr_cursor_absolute_to_layout_coords(seat->cursor, event->device, event->x, event->y, &lx, &ly);
+	wlr_cursor_absolute_to_layout_coords(seat->cursor, &event->touch->base, event->x, event->y, &lx, &ly);
 
 	double sx, sy;
 	struct wlr_surface *surface;
@@ -451,7 +451,7 @@ handle_touch_down(struct wl_listener *listener, void *data)
 		seat->touch_id = event->touch_id;
 		seat->touch_lx = lx;
 		seat->touch_ly = ly;
-		press_cursor_button(seat, event->device, event->time_msec, BTN_LEFT, WLR_BUTTON_PRESSED, lx, ly);
+		press_cursor_button(seat, &event->touch->base, event->time_msec, BTN_LEFT, WLR_BUTTON_PRESSED, lx, ly);
 	}
 
 	wlr_idle_notify_activity(seat->server->idle, seat->seat);
@@ -468,7 +468,7 @@ handle_touch_up(struct wl_listener *listener, void *data)
 	}
 
 	if (wlr_seat_touch_num_points(seat->seat) == 1) {
-		press_cursor_button(seat, event->device, event->time_msec, BTN_LEFT, WLR_BUTTON_RELEASED,
+		press_cursor_button(seat, &event->touch->base, event->time_msec, BTN_LEFT, WLR_BUTTON_RELEASED,
 				    seat->touch_lx, seat->touch_ly);
 	}
 
@@ -487,7 +487,7 @@ handle_touch_motion(struct wl_listener *listener, void *data)
 	}
 
 	double lx, ly;
-	wlr_cursor_absolute_to_layout_coords(seat->cursor, event->device, event->x, event->y, &lx, &ly);
+	wlr_cursor_absolute_to_layout_coords(seat->cursor, &event->touch->base, event->x, event->y, &lx, &ly);
 
 	double sx, sy;
 	struct wlr_surface *surface;
@@ -535,7 +535,7 @@ handle_cursor_button(struct wl_listener *listener, void *data)
 	struct wlr_pointer_button_event *event = data;
 
 	wlr_seat_pointer_notify_button(seat->seat, event->time_msec, event->button, event->state);
-	press_cursor_button(seat, event->device, event->time_msec, event->button, event->state, seat->cursor->x,
+	press_cursor_button(seat, &event->pointer->base, event->time_msec, event->button, event->state, seat->cursor->x,
 			    seat->cursor->y);
 	wlr_idle_notify_activity(seat->server->idle, seat->seat);
 }
@@ -571,7 +571,7 @@ handle_cursor_motion_absolute(struct wl_listener *listener, void *data)
 	struct cg_seat *seat = wl_container_of(listener, seat, cursor_motion_absolute);
 	struct wlr_pointer_motion_absolute_event *event = data;
 
-	wlr_cursor_warp_absolute(seat->cursor, event->device, event->x, event->y);
+	wlr_cursor_warp_absolute(seat->cursor, &event->pointer->base, event->x, event->y);
 	process_cursor_motion(seat, event->time_msec);
 	wlr_idle_notify_activity(seat->server->idle, seat->seat);
 }
@@ -582,7 +582,7 @@ handle_cursor_motion(struct wl_listener *listener, void *data)
 	struct cg_seat *seat = wl_container_of(listener, seat, cursor_motion);
 	struct wlr_pointer_motion_event *event = data;
 
-	wlr_cursor_move(seat->cursor, event->device, event->delta_x, event->delta_y);
+	wlr_cursor_move(seat->cursor, &event->pointer->base, event->delta_x, event->delta_y);
 	process_cursor_motion(seat, event->time_msec);
 	wlr_idle_notify_activity(seat->server->idle, seat->seat);
 }
